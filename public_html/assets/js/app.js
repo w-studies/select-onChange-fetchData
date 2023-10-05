@@ -1,5 +1,9 @@
-/*
+/**
  * FETCH JSON SERVICE
+ * @param {*} url
+ * @param {*} data
+ * @param {*} method
+ * @returns
  */
 const fetchJson = async (url, data, method = 'get') => {
   const headers = {
@@ -14,7 +18,7 @@ const fetchJson = async (url, data, method = 'get') => {
     statusCode: 404,
     body: 'not found'
   }
-
+  alertDiv.classList.add('d-none')
   // faz o request
   const request = await fetch(url, headers)
 
@@ -23,19 +27,27 @@ const fetchJson = async (url, data, method = 'get') => {
     const body = await request.json()
     // define retorno da resposta
     retorno.statusCode = request.status
-    console.log('JSONbody :>> ', body)
+
     retorno.body = body
   } else {
     const body = await request.json()
     // define retorno
     retorno.statusCode = request.status == 200 ? 400 : request.status
 
-    retorno.body = body
+    alertDiv.innerHTML = body
+    alertDiv.classList.remove('d-none')
+    retorno.body = []
   }
 
   return retorno
 }
 
+/**
+ * FILL LIST FUNCTION
+ * @param {*} selector
+ * @param {*} data
+ * @param {*} key
+ */
 const fillList = (selector, data, key = 'name') => {
   const list = document.querySelector(selector)
   list.innerHTML = ''
@@ -47,13 +59,19 @@ const fillList = (selector, data, key = 'name') => {
   list.innerHTML = rows.join('')
 }
 
+/**
+ * FILL TABLE FUNCTION
+ * @param {*} selector
+ * @param {*} data
+ * @returns
+ */
 const fillTable = (selector, data) => {
   const table = document.querySelector(selector)
   table.innerHTML = ''
 
   if (!data.length) return
   // create table header Data
-  const hData = Object.keys(data[0])
+  const hData = Object.keys(data[1] ?? data[0])
 
   const rows = data.map((row) => {
     const rData = []
@@ -66,8 +84,14 @@ const fillTable = (selector, data) => {
   table.innerHTML = `<thead><tr><th>${hData.join('</th><th>')}</th></tr></thead>` + rows.join('')
 }
 
+/**
+ * FILL SELECT FUNCTION
+ * @param {*} selector
+ * @param {*} data
+ * @param {*} callback
+ */
 const fillSelect = (selector, data, callback) => {
-  // define o elemento select a ser alimentado
+  // define se select element to be feed
   const selectToFill = document.querySelector(selector)
   const selectOptions = []
   selectToFill.innerHTML = '<option value="">loading data...</option>'
@@ -89,39 +113,43 @@ const fillSelect = (selector, data, callback) => {
 
   callback(selectToFill)
 }
-
-// carregar os dados do primeiro select
-fetchJson('api/first').then(({ body }) =>
-  fillSelect('#firstSelect', [{ id: '', val: 'Select an option' }, ...body], (e) => {
-    fillTable('#firstTable', body)
-    fillList('#firstList', body, 'name')
+/**
+ * FILL ALL FUNCTION
+ * @param {*} target
+ * @param {*} data
+ * @param {*} nextElement
+ */
+const fillAll = (target, data, nextElement) => {
+  fillSelect(target, data, (e) => {
+    e.dispatchEvent(new Event('change'))
   })
-)
+  fillTable(`${nextElement}Table`, data)
+  fillList(`${nextElement}List`, data, 'name')
+}
 
-// ouvir o evento change do primeiro select
+// Load data for the first select
+fetchJson('api/first').then(({ body }) => body.length && fillAll('#firstSelect', body, '#first'))
+
+// Listen the changeEvent for all selects with [data-target][data-href]
 const selectsToFillAnother = document.querySelectorAll('select[data-target][data-href]')
 
 for (const select of selectsToFillAnother) {
-  select.onchange = ({ target }) => {
+  select.onchange = async ({ target }) => {
     const id = target.value
     const href = target.dataset.href
     const targetSelect = target.dataset.target
-    const positionElement = targetSelect.startsWith('#second') ? 'second' : 'third'
+    const nextElement = targetSelect.startsWith('#second') ? '#second' : '#third'
+
+    document.querySelector(targetSelect).innerHTML = '<option value="">loading data...</option>'
+    fillTable(`${nextElement}Table`, [{ status: 'loading' }])
+    fillList(`${nextElement}List`, [{ name: 'loading' }])
+
+    let body = [{ id: '', value: 'Select a Previous Select option' }]
+
     if (id) {
-      fetchJson(`api/${href}/${id}`).then(({ body }) => {
-        fillSelect(targetSelect, body, (e) => {
-          e.dispatchEvent(new Event('change'))
-        })
-        fillTable(`#${positionElement}Table`, body)
-        fillList(`#${positionElement}List`, body, 'name')
-      })
-    } else {
-      fillSelect(targetSelect, [{ id: '', value: 'Select a Previous Select option' }], (e) => {
-        e.dispatchEvent(new Event('change'))
-      })
-      console.log('positionElement :>> ', positionElement)
-      fillTable(`#${positionElement}Table`, [])
-      fillList(`#${positionElement}List`, [], '')
+      body = await fetchJson(`api/${href}/${id}`).then(({ body }) => body)
     }
+
+    fillAll(targetSelect, body, nextElement)
   }
 }

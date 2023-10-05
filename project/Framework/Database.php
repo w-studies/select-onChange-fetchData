@@ -20,10 +20,8 @@ class Database
     try {
       $this->connection = new PDO($dns, $user, $password);
     } catch (PDOException $error) {
-      exit('Database connection error: '.$error->getMessage());
-      echo '<pre>$error: ';
-      var_dump($error);
-      echo '</pre>';
+      jsonResponse('Database connection error: '.$error->getMessage(), 500);
+      exit(json_encode('Database connection error: '.$error->getMessage()));
     }
   }
 }

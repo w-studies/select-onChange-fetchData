@@ -2,7 +2,7 @@
 Example of ajax request fetching data onChange select
 
 
-- execute o database.sql
+- execute o `database.sql`
 - abra o arquivo `project/App/Config/Constants.php` e defina os dados para conexão com o database:
 <pre>
 DB_HOST    

@@ -30,7 +30,7 @@ function jsonResponse(string|array $data = null, int $code = 200): void
     if (is_array($data)) {
       $data['debug'] = $debug;
     } else {
-      $data .= "<small class='text-secondary'><b>FILE</b>: $debug[file], <b>LINE</b>: $debug[line]<small>";
+      $data .= "<div class='small text-secondary'><b>FILE</b>: $debug[file], <b>LINE</b>: $debug[line]<div>";
     }
   }
   exit(json_encode($data));
