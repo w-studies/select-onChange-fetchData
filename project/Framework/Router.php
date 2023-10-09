@@ -71,7 +71,11 @@ class Router
 
   private function normalizeURL(string $url)
   {
-    $normalizedURL = normalizer_normalize(trim($url, '/'), \Normalizer::FORM_D);
+
+    $normalizedURL = trim($url, '/');
+    if(function_exists('normalizer_normalize')) {
+      $normalizedURL = normalizer_normalize(trim($url, '/'), \Normalizer::FORM_D);
+    }
     $cleanedURL    = preg_replace('/[\p{M}\p{Zs}]/u', '', strtolower($normalizedURL));
     $path          = preg_replace('#[/]{2,}#', '/', "/{$cleanedURL}/");
 

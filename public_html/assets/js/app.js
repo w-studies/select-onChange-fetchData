@@ -22,18 +22,25 @@ const fetchJson = async (url, data, method = 'get') => {
   // faz o request
   const request = await fetch(url, headers)
 
-  if (request.status === 200 && request.headers.get('content-type').includes('json')) {
-    // converte o resultado da request em json
-    const body = await request.json()
-    // define retorno da resposta
-    retorno.statusCode = request.status
+  if (request.headers.get('content-type').includes('json')) {
+    if (request.status === 200) {
+      // converte o resultado da request em json
+      const body = await request.json()
+      // define retorno da resposta
+      retorno.statusCode = request.status
 
-    retorno.body = body
+      retorno.body = body
+    } else {
+      const body = await request.json()
+      // define retorno
+      retorno.statusCode = request.status == 200 ? 400 : request.status
+
+      alertDiv.innerHTML = body
+      alertDiv.classList.remove('d-none')
+      retorno.body = []
+    }
   } else {
-    const body = await request.json()
-    // define retorno
-    retorno.statusCode = request.status == 200 ? 400 : request.status
-
+    const body = await request.text()
     alertDiv.innerHTML = body
     alertDiv.classList.remove('d-none')
     retorno.body = []

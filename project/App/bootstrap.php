@@ -7,9 +7,9 @@ use Framework\App;
 
 use function App\Config\registerRoutes;
 
-spl_autoload_register(fn ($class) => require '../project/' . $class . '.php');
+spl_autoload_register(fn ($class) => require '../project/'.str_replace('\\', '/', $class).'.php');
 
-require Paths::SOURCE . 'App/Config/Routes.php';
+require Paths::SOURCE.'App/Config/Routes.php';
 require 'Config/Constants.php';
 
 $app = new App();
